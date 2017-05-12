@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+import os
+
+import cfg
+
+def tail_file(path):
+  first_call = True
+  while True:
+    try:
+      with open(path) as input:
+        if first_call:
+          input.seek(0, 2)
+          first_call = False
+        latest_data = input.read()
+        while True:
+          if '\n' not in latest_data:
+            latest_data += input.read()
+            if '\n' not in latest_data:
+              yield None
+              if not os.path.isfile(path):
+                break
+              continue
+          latest_lines = latest_data.split('\n')
+          if latest_data[-1] != '\n':
+            latest_data = latest_lines[-1]
+          else:
+            latest_data = input.read()
+          for line in latest_lines[:-1]:
+            yield line
+    except IOError:
+      yield None
+
+def data_rx(l):
+  if l is None:
+    return
+  print l
+
+def main():
+  for l in tail_file(cfg.data_source):
+    data_rx(l)
+
+main()
